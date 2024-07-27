@@ -314,6 +314,7 @@ class FlutterLogin extends StatefulWidget {
     this.onSwitchToAdditionalFields,
     this.initialIsoCode,
     this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.manual,
+    this.signupBackground
   })  : assert((logo is String?) || (logo is ImageProvider?)),
         logo = logo is String ? AssetImage(logo) : logo as ImageProvider?;
 
@@ -461,6 +462,7 @@ class FlutterLogin extends StatefulWidget {
   final String? initialIsoCode;
 
   final ScrollViewKeyboardDismissBehavior keyboardDismissBehavior;
+  final Color? signupBackground;
 
   static String? defaultEmailValidator(String? value) {
     if (value == null || value.isEmpty || !email.hasMatch(value)) {
@@ -858,6 +860,7 @@ class _FlutterLoginState extends State<FlutterLogin>
                             widget.confirmSignupKeyboardType,
                         introWidget: widget.headerWidget,
                         initialIsoCode: widget.initialIsoCode,
+                        signupBackground: widget.signupBackground,
                       ),
                     ),
                     Positioned(

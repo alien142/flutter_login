@@ -23,6 +23,7 @@ class _LoginCard extends StatefulWidget {
     this.hideProvidersTitle = false,
     this.introWidget,
     required this.initialIsoCode,
+    this.signupBackground
   });
 
   final AnimationController loadingController;
@@ -42,6 +43,7 @@ class _LoginCard extends StatefulWidget {
   final Future<bool> Function() requireSignUpConfirmation;
   final Widget? introWidget;
   final String? initialIsoCode;
+  final Color? signupBackground;
 
   @override
   _LoginCardState createState() => _LoginCardState();
@@ -732,7 +734,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
                 ? ExpandableContainerState.shrunk
                 : ExpandableContainerState.expanded,
             alignment: Alignment.topLeft,
-            color: theme.cardTheme.color,
+            color: widget.signupBackground,
             width: cardWidth,
             padding: const EdgeInsets.symmetric(horizontal: cardPadding),
             onExpandCompleted: () => _postSwitchAuthController.forward(),

@@ -54,6 +54,7 @@ class AuthCard extends StatefulWidget {
     this.introWidget,
     required this.initialIsoCode,
     this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.manual,
+    this.signupBackground
   });
 
   final EdgeInsets padding;
@@ -82,6 +83,7 @@ class AuthCard extends StatefulWidget {
   final TextInputType? confirmSignupKeyboardType;
   final Widget? introWidget;
   final String? initialIsoCode;
+  final Color? signupBackground;
 
   @override
   AuthCardState createState() => AuthCardState();
@@ -351,7 +353,6 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
           true;
       return auth.onConfirmSignup != null && confirmSignupRequired;
     }
-
     switch (index) {
       case _loginPageIndex:
         return _buildLoadingAnimator(
@@ -381,6 +382,7 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
             hideProvidersTitle: widget.hideProvidersTitle,
             introWidget: widget.introWidget,
             initialIsoCode: widget.initialIsoCode,
+            signupBackground: widget.signupBackground,
           ),
         );
       case _recoveryIndex:
@@ -442,6 +444,7 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
         );
 
       case _confirmSignup:
+        print("_additionalSignUpIndex");
         return _buildLoadingAnimator(
           theme: Theme.of(context),
           child: _ConfirmSignupCard(
@@ -471,7 +474,6 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final deviceSize = MediaQuery.of(context).size;
-
     final Widget current = Container(
       height: deviceSize.height,
       width: deviceSize.width,
