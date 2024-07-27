@@ -68,9 +68,15 @@ class _ExpandableContainerState extends State<ExpandableContainer> {
         parent: _controller,
         curve: const Interval(.6875, 1.0, curve: Curves.fastOutSlowIn),
       ),
-    )..addStatusListener((status) {
+    )..addStatusListener((status) async {
         if (status == AnimationStatus.completed) {
           widget.onExpandCompleted?.call();
+          await Future.delayed(const Duration(milliseconds: 250));
+          if (mounted) {
+            setState(() {
+
+            });
+          }
         }
       });
   }
@@ -83,7 +89,7 @@ class _ExpandableContainerState extends State<ExpandableContainer> {
         children: <Widget>[
           Positioned.fill(
             child: DecoratedBox(
-              decoration: BoxDecoration(color: widget.backgroundColor),
+              decoration: BoxDecoration(color: _slideAnimation.isCompleted ? widget.color : widget.backgroundColor),
             ),
           ),
           SlideTransition(
