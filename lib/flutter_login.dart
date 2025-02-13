@@ -129,6 +129,7 @@ class _AnimationTimeDilationDropdown extends StatelessWidget {
 class _Header extends StatefulWidget {
   const _Header({
     this.logo,
+    this.logoColor,
     this.logoTag,
     this.logoWidth = 0.75,
     this.title,
@@ -140,6 +141,7 @@ class _Header extends StatefulWidget {
   });
 
   final ImageProvider? logo;
+  final Color? logoColor;
   final String? logoTag;
   final double logoWidth;
   final String? title;
@@ -213,6 +215,7 @@ class __HeaderState extends State<_Header> {
             filterQuality: FilterQuality.high,
             height: logoHeight,
             width: widget.logoWidth * cardWidth,
+            color: widget.logoColor,
           )
         : const SizedBox.shrink();
 
@@ -281,6 +284,7 @@ class FlutterLogin extends StatefulWidget {
 
     /// The [ImageProvider] or asset path [String] for the logo image to be displayed
     dynamic logo,
+    this.logoColor,
     this.messages,
     this.theme,
     this.userValidator,
@@ -343,7 +347,7 @@ class FlutterLogin extends StatefulWidget {
 
   /// The image provider for the logo image to be displayed
   final ImageProvider? logo;
-
+  final Color? logoColor;
   /// Describes all of the labels, text hints, button texts and other auth
   /// descriptions
   final LoginMessages? messages;
@@ -549,6 +553,7 @@ class _FlutterLoginState extends State<FlutterLogin>
       titleController: _titleController,
       height: height,
       logo: widget.logo,
+      logoColor: widget.logoColor,
       logoTag: widget.logoTag,
       logoWidth: widget.theme?.logoWidth ?? 0.75,
       title: widget.title,
