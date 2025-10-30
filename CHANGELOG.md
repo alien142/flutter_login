@@ -1,3 +1,25 @@
+## 6.0.0
+Breaking Changes:
+- Replaced intl_phone_number_input with form_builder_phone_field, removing need for platform specific code.
+This change makes the plugin WASM compatible & fixes build errors on Android.
+
+Other changes:
+- Updated dependencies, fixed deprecated member usages
+
+## 5.1.0
+Features:
+- Added background image (thanks @alenas !)
+- Allow customization of button icon color (thanks @klondikedragon !)
+- Autofocus feature (thanks @klondikedragon !)
+- Added feature to hide password-fields during signup (thanks @eggzotic !)
+- Added circular loading indicator to large provider button
+- Updated dependencies to be compatible with latest flutter release
+
+Bugs fixed:
+- Fixed scale transition issues.
+- Added default widget size for when size lookup fails
+- FIxed mounted checks in [LoginCard] (thanks @vargab95 !)
+
 ## 5.0.0
 Breaking Changes:
 - [Android] Upgraded to Gradle 8. Due to a dependency update (intl_phone_number_input), the minimum Flutter version is changed to 3.16.

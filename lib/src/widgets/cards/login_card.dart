@@ -1,11 +1,14 @@
 part of 'auth_card_builder.dart';
 
-// https://stackoverflow.com/a/32686261/9449426
+/// A basic email validation RegExp pattern.
+/// Source: https://stackoverflow.com/a/32686261/9449426
+///
+/// Matches a general email format: non-whitespace characters before and after
+/// the '@', and at least one '.' in the domain part.
 final email = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
 class _LoginCard extends StatefulWidget {
   const _LoginCard({
-    super.key,
     required this.loadingController,
     required this.userValidator,
     required this.validateUserImmediately,
@@ -16,13 +19,17 @@ class _LoginCard extends StatefulWidget {
     required this.requireAdditionalSignUpFields,
     required this.onSwitchConfirmSignup,
     required this.requireSignUpConfirmation,
+    required this.initialIsoCode,
+    required this.hideSignupPasswordFields,
+    required this.onSwitchAuthMode,
+    required this.autofocus,
+    super.key,
     this.onSubmitCompleted,
     this.hideForgotPasswordButton = false,
     this.hideSignUpButton = false,
     this.loginAfterSignUp = true,
     this.hideProvidersTitle = false,
     this.introWidget,
-    required this.initialIsoCode,
     this.signupBackground
   });
 
@@ -44,6 +51,9 @@ class _LoginCard extends StatefulWidget {
   final Widget? introWidget;
   final String? initialIsoCode;
   final Color? signupBackground;
+  final bool hideSignupPasswordFields;
+  final void Function(AuthMode mode) onSwitchAuthMode;
+  final bool autofocus;
 
   @override
   _LoginCardState createState() => _LoginCardState();
@@ -52,7 +62,7 @@ class _LoginCard extends StatefulWidget {
 class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey();
 
-  final _userFieldKey = GlobalKey<FormFieldState>();
+  final _userFieldKey = GlobalKey<FormFieldState<void>>();
   final _userFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
   final _confirmPasswordFocusNode = FocusNode();
@@ -113,13 +123,13 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
         .toList();
 
     _nameTextFieldLoadingAnimationInterval = const Interval(0, .85);
-    _passTextFieldLoadingAnimationInterval = const Interval(.15, 1.0);
+    _passTextFieldLoadingAnimationInterval = const Interval(.15, 1);
     _textButtonLoadingAnimationInterval =
-        const Interval(.6, 1.0, curve: Curves.easeOut);
-    _buttonScaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        const Interval(.6, 1, curve: Curves.easeOut);
+    _buttonScaleAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: widget.loadingController,
-        curve: const Interval(.4, 1.0, curve: Curves.easeOutBack),
+        curve: const Interval(.4, 1, curve: Curves.easeOutBack),
       ),
     );
 
@@ -223,12 +233,12 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       }
     });
 
-    if (context.mounted) {
+    if (mounted) {
       await _submitController.reverse();
     }
 
     if (!isNullOrEmpty(error)) {
-      if (context.mounted) {
+      if (mounted) {
         showErrorToast(context, messages.flushbarTitleError, error!);
       }
 
@@ -254,7 +264,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
         _switchAuthMode();
         return false;
       } else if (!widget.loginAfterSignUp) {
-        if (context.mounted) {
+        if (mounted) {
           showSuccessToast(
             context,
             messages.flushbarTitleSuccess,
@@ -279,13 +289,13 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
   }) async {
     final messages = Provider.of<LoginMessages>(context, listen: false);
     if (!loginProvider.animated) {
-      final String? error = await loginProvider.callback();
+      final error = await loginProvider.callback();
 
       if (!isNullOrEmpty(error)) {
         // Only show error toast if error is not in exclusion list
         if (loginProvider.errorsToExcludeFromErrorMessage == null ||
             !loginProvider.errorsToExcludeFromErrorMessage!.contains(error)) {
-          if (context.mounted) {
+          if (mounted) {
             showErrorToast(context, messages.flushbarTitleError, error!);
           }
         }
@@ -318,7 +328,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       // Only show error toast if error is not in exclusion list
       if (loginProvider.errorsToExcludeFromErrorMessage == null ||
           !loginProvider.errorsToExcludeFromErrorMessage!.contains(error)) {
-        if (context.mounted) {
+        if (mounted) {
           showErrorToast(context, messages.flushbarTitleError, error!);
         }
       }
@@ -349,7 +359,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
           // Only show error toast if error is not in exclusion list
           if (loginProvider.errorsToExcludeFromErrorMessage == null ||
               !loginProvider.errorsToExcludeFromErrorMessage!.contains(error)) {
-            if (context.mounted) {
+            if (mounted) {
               showErrorToast(context, messages.flushbarTitleError, error!);
             }
           }
@@ -388,6 +398,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       prefixIcon: getPrefixIcon(widget.userType),
       keyboardType: getKeyboardType(widget.userType),
       textInputAction: TextInputAction.next,
+      autofocus: widget.autofocus,
       focusNode: _userFocusNode,
       onFieldSubmitted: (value) {
         FocusScope.of(context).requestFocus(_passwordFocusNode);
@@ -491,7 +502,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       child: AnimatedButton(
         controller: _submitController,
         text: auth.isLogin ? messages.loginButton : messages.signupButton,
-        onPressed: () => _submit(),
+        onPressed: _submit,
       ),
     );
   }
@@ -513,9 +524,14 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       fadeDirection: FadeDirection.topToBottom,
       child: MaterialButton(
         disabledTextColor: theme.primaryColor,
-        onPressed: buttonEnabled ? _switchAuthMode : null,
+        onPressed: buttonEnabled
+            ? () {
+                _switchAuthMode();
+                widget.onSwitchAuthMode(auth.mode);
+              }
+            : null,
         padding: loginTheme.authButtonPadding ??
-            const EdgeInsets.symmetric(horizontal: 30.0, vertical: 8.0),
+            const EdgeInsets.symmetric(horizontal: 30, vertical: 8),
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         textColor: loginTheme.switchAuthTextColor ?? calculatedTextColor,
         child: AnimatedText(
@@ -597,19 +613,14 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: buttonProvidersList.map((loginProvider) {
-        return Padding(
-          padding: loginTheme.providerButtonPadding ??
-              const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
-          child: ScaleTransition(
-            scale: _buttonScaleAnimation,
-            child: SignInButton(
-              loginProvider.button!,
-              onPressed: () => _loginProviderSubmit(
-                loginProvider: loginProvider,
-              ),
-              text: loginProvider.label,
+        return ScaleTransition(
+          scale: _buttonScaleAnimation,
+          child: SignInButton(
+            loginProvider.button!,
+            onPressed: () async => _loginProviderSubmit(
+              loginProvider: loginProvider,
             ),
-            // child: loginProvider.button,
+            text: loginProvider.label,
           ),
         );
       }).toList(),
@@ -627,7 +638,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
         final index = iconProvidersList.indexOf(loginProvider);
         return Padding(
           padding: loginTheme.providerButtonPadding ??
-              const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
+              const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
           child: ScaleTransition(
             scale: _buttonScaleAnimation,
             child: Column(
@@ -635,6 +646,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
                 AnimatedIconButton(
                   color: Colors.transparent,
                   icon: loginProvider.icon!,
+                  iconColor: loginTheme.buttonTheme.iconColor,
                   controller: _providerControllerList[index],
                   tooltip: loginProvider.label,
                   onPressed: () => _loginProviderSubmit(
@@ -658,7 +670,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
         children: <Widget>[
           const Expanded(child: Divider()),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8),
             child: Text(messages.providersTitleFirst),
           ),
           const Expanded(child: Divider()),
@@ -674,7 +686,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
         children: <Widget>[
           const Expanded(child: Divider()),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8),
             child: Text(messages.providersTitleSecond),
           ),
           const Expanded(child: Divider()),
@@ -695,10 +707,12 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final auth = Provider.of<Auth>(context);
     final isLogin = auth.isLogin;
+    final isSignup = auth.isSignup;
     final messages = Provider.of<LoginMessages>(context, listen: false);
     final loginTheme = Provider.of<LoginTheme>(context, listen: false);
     final theme = Theme.of(context);
-    final cardWidth = min(MediaQuery.of(context).size.width * 0.75, 360.0);
+    final cardWidth =
+        min<double>(MediaQuery.of(context).size.width * 0.75, 360);
     const cardPadding = 16.0;
     final textFieldWidth = cardWidth - cardPadding * 2;
     final authForm = Form(
@@ -716,10 +730,15 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  if (widget.introWidget != null) widget.introWidget!,
+                  if (widget.introWidget != null)
+                    ScaleTransition(
+                        scale: _buttonScaleAnimation,
+                        child: widget.introWidget),
                   _buildUserField(textFieldWidth, messages, auth),
-                  const SizedBox(height: 20),
-                  _buildPasswordField(textFieldWidth, messages, auth),
+                  if (!isSignup || !widget.hideSignupPasswordFields) ...[
+                    const SizedBox(height: 20),
+                    _buildPasswordField(textFieldWidth, messages, auth),
+                  ],
                   const SizedBox(height: 10),
                 ],
               ),
@@ -740,14 +759,15 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
             onExpandCompleted: () => _postSwitchAuthController.forward(),
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10.0),
-                  child: _buildConfirmPasswordField(
-                    textFieldWidth,
-                    messages,
-                    auth,
+                if (!isSignup || !widget.hideSignupPasswordFields)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: _buildConfirmPasswordField(
+                      textFieldWidth,
+                      messages,
+                      auth,
+                    ),
                   ),
-                ),
                 for (final e in auth.termsOfService)
                   TermCheckbox(
                     termOfService: e,
