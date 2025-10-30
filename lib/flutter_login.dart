@@ -140,6 +140,7 @@ class _Header extends StatefulWidget {
     this.logoTag,
     this.logoWidth = 0.75,
     this.title,
+    this.titleMaxLines,
     this.titleTag,
     this.height = 250.0,
     this.logoController,
@@ -151,6 +152,7 @@ class _Header extends StatefulWidget {
   final String? logoTag;
   final double logoWidth;
   final String? title;
+  final int? titleMaxLines;
   final String? titleTag;
   final double height;
   final LoginTheme loginTheme;
@@ -179,7 +181,7 @@ class __HeaderState extends State<_Header> {
         ),
       ),
       textDirection: TextDirection.ltr,
-      maxLines: 1,
+      maxLines: widget.titleMaxLines ?? 1,
     )..layout(const BoxConstraints());
 
     return renderParagraph
@@ -240,38 +242,45 @@ class __HeaderState extends State<_Header> {
         smallFontSize: widget.loginTheme.afterHeroFontSize,
         style: theme.textTheme.displaySmall,
         viewState: ViewState.enlarged,
+        maxLines: widget.titleMaxLines ?? 1,
       );
     } else if (!isNullOrEmpty(widget.title)) {
       title = Text(
         widget.title!,
         key: kTitleKey,
         style: theme.textTheme.displaySmall,
+        maxLines: widget.titleMaxLines,
       );
     } else {
       title = null;
     }
-
+    final headerWidth = min<double>(MediaQuery.of(context).size.width * 0.75, 360);
     return SafeArea(
-      child: SizedBox(
-        height: widget.height - MediaQuery.of(context).padding.top,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: <Widget>[
-            if (displayLogo)
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: headerWidth
+        ),
+        child: SizedBox(
+          height: widget.height - MediaQuery.of(context).padding.top,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              if (displayLogo)
+                FadeIn(
+                  controller: widget.logoController,
+                  offset: .25,
+                  fadeDirection: FadeDirection.topToBottom,
+                  child: logo,
+                ),
+              const SizedBox(height: gap),
               FadeIn(
-                controller: widget.logoController,
-                offset: .25,
+                controller: widget.titleController,
+                offset: .5,
                 fadeDirection: FadeDirection.topToBottom,
-                child: logo,
+                child: title,
               ),
-            const SizedBox(height: gap),
-            FadeIn(
-              controller: widget.titleController,
-              offset: .5,
-              fadeDirection: FadeDirection.topToBottom,
-              child: title,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -359,6 +368,7 @@ class FlutterLogin extends StatefulWidget {
     this.autofocus = false,
     this.logoColor,
     this.signupBackground,
+    this.titleMaxLines
   })  : assert(
   logo == null || logo is String || logo is ImageProvider,
   'logo must be a String (path to asset) or an ImageProvider (e.g., AssetImage, NetworkImage, FileImage).',
@@ -544,6 +554,8 @@ class FlutterLogin extends StatefulWidget {
   /// Defaults to `false`. If `true`, the user field receives focus automatically.
   final bool autofocus;
 
+  /// Max line for title
+  final int? titleMaxLines;
   /// Default email validator used when none is supplied.
   ///
   /// Returns `'Invalid email!'` if the value is null, empty, or doesn't match a basic email regex.
@@ -639,6 +651,7 @@ class _FlutterLoginState extends State<FlutterLogin>
       logoTag: widget.logoTag,
       logoWidth: widget.theme?.logoWidth ?? 0.75,
       title: widget.title,
+      titleMaxLines: widget.titleMaxLines,
       titleTag: widget.titleTag,
       loginTheme: loginTheme,
     );

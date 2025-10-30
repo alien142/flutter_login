@@ -168,7 +168,7 @@ class __HeroTextContentState extends State<_HeroTextContent>
         locale: widget.locale,
         strutStyle: widget.strutStyle,
         overflow: TextOverflow.visible,
-        softWrap: false,
+        softWrap: true,
       ),
     );
   }
